@@ -1,0 +1,248 @@
+using Microsoft.VisualBasic;
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.ComponentModel.DataAnnotations.Schema;
+using System.Linq;
+
+namespace Lotto
+{
+    class Program
+    {
+        
+
+
+        static void Main(string[] args)
+        {
+            Random rnd = new Random();
+
+            int day = 0;
+            int jackpot;
+            int startWallet = 30;
+            int wallet;
+            int maxCoupons = 6;
+            int coupon;
+            int couponCost = 3;
+            int win;
+
+            do
+            {
+                win = 0;
+                day = 0;
+                wallet = startWallet;
+                List<int[]> coupons = new List<int[]>();
+                ConsoleKey choose;
+
+                do
+                {
+                    
+                    day++;
+                    coupon = 0;
+                    jackpot = rnd.Next(2, 29) * 1000000;
+                    do
+                    {
+
+                        Console.Clear();
+
+                        Console.WriteLine("Day: {0} \nWallet: {1}$ \nJackepot: {2}$ ", day, wallet, jackpot);
+                        Console.WriteLine("Coupons: {0}/{1} \n1. Place a bet: -{2}\n2. Random bet -{2}\n3. Next day\n4. Quit game", coupon, maxCoupons, couponCost);
+
+                        choose = Console.ReadKey().Key;
+
+                        if (choose == ConsoleKey.D1)
+                        {
+                            if (coupon >= maxCoupons)
+                            {
+                                Console.WriteLine("You can't place any more bet today");
+                                Console.ReadKey();
+                            }
+                            else
+                            {
+                                coupons.Add(Bet());
+                                wallet -= 3;
+                                coupon++;
+                            }
+                        }
+                        else if (choose == ConsoleKey.D2)
+                        {
+                            if (coupon >= maxCoupons)
+                            {
+                                Console.WriteLine("You can't place any more bet today");
+                                Console.ReadKey();
+                            }
+                            else
+                            {
+                                coupons.Add(RandomNumbers());
+                                wallet -= 3;
+                                coupon++;
+                            }
+                        }
+
+                    } while(!(choose == ConsoleKey.D3)  && !(choose == ConsoleKey.D4));
+
+                    if (!(choose == ConsoleKey.D4))
+                    {
+                        win = CheckCoupons(coupons);
+                        wallet += CheckWin(win, jackpot);
+                    }
+
+                    coupons.Clear();
+
+                } while (wallet > 3 && !(choose == ConsoleKey.D4));
+
+                
+
+                Console.Clear();
+                Console.WriteLine( "Your score: {0}\nDay: {1}", wallet, day);
+                Console.WriteLine("Press enter to play again:");
+
+            } while (Console.ReadKey().Key == ConsoleKey.Enter);
+
+
+        }
+
+        private static int CheckWin(int win, int jackpot)
+        {
+            Console.Clear();
+            int prize = 0; 
+            if(win<2)
+                Console.WriteLine("You won nothing");
+            else if(win == 2)
+            {
+                prize = (int)(jackpot * 0.0001);
+                Console.WriteLine("You won {0}",prize);
+            }
+            else if (win == 3)
+            {
+                prize = (int)(jackpot * 0.001);
+                Console.WriteLine("You won {0}", prize);
+            }
+            else if (win == 4)
+            {
+                prize = (int)(jackpot * 0.10);
+                Console.WriteLine("You won {0}", prize);
+            }
+            else if (win == 5)
+            {
+                prize = (int)(jackpot * 0.50);
+                Console.WriteLine("You won {0}", prize);
+            }
+            else if (win == 6)
+            {
+                prize = jackpot;
+                Console.WriteLine("You won {0}", prize);
+            }
+
+            Console.ReadKey();
+
+            return prize;
+        }
+
+        private static int CheckCoupons(List<int[]> coupons)
+        {
+            int[] winningNumbers = RandomNumbers();
+            int win;
+            int maxWin = 0;
+
+            Console.Clear();
+            Console.WriteLine("Your Coupons:");
+            foreach (int[] x in coupons)
+            {
+                
+                foreach (int y in x)
+                {
+                    Console.Write("{0} ", y);
+                }
+                Console.Write("\n");
+            }
+
+            Console.WriteLine("Winning numbers:");
+            foreach (int l in winningNumbers)
+            {
+                Console.Write("{0} ",l);
+            }
+            foreach (int[] l in coupons)
+            {
+                win = 0;
+                for (int i = 0; i <l.Length; i++)
+                {
+                    if (winningNumbers.Contains(l[i]))
+                        win++;
+                }
+
+                if (win > maxWin)
+                    maxWin = win;
+
+            }
+            Console.ReadKey();
+            return maxWin;  
+        }
+
+        private static int[] RandomNumbers()
+        {
+            
+            int number;
+            int[] randomNumbers = new int[6];
+
+            Random rnd = new Random();
+
+            for (int i = 0; i < randomNumbers.Length; i++)
+            {
+                number = rnd.Next(1, 49);
+
+                if (!(randomNumbers.Contains(number)))
+                    randomNumbers[i] = number;
+                else
+                    i--;
+            }
+            Array.Sort(randomNumbers);
+            return randomNumbers;
+        }
+
+        private static int[] Bet()
+        {
+            int[] bet = new int[6];
+            int number =-1;
+            for (int i = 0; i < bet.Length; i++)
+            {
+                Console.Clear();
+                Console.Write("Numbers u bet: ");
+
+                foreach (int l in bet)
+                {
+                    if (l > 0)
+                        Console.Write(l + ", ");
+                }
+                Console.WriteLine();
+                Console.WriteLine("Numbers u can bet:");
+                for(int  j = 1; j<=49; j++)
+                {
+
+                    if (bet.Contains(j))
+                        Console.Write("X ");
+                    else
+                        Console.Write(j + " ");
+
+                    if (j < 10)
+                        Console.Write(" ");
+                       
+                    if(j%10 == 0)
+                        Console.WriteLine();
+
+                }
+                Console.WriteLine();
+
+                bool ifGood = int.TryParse(Console.ReadLine(), out number);
+
+                if (ifGood && number > 0 && number < 50 && !(bet.Contains(number)))
+                    bet[i] = number;
+                else
+                    i--;
+            }
+
+            Array.Sort(bet);
+
+            return bet;
+        }
+    }
+}
